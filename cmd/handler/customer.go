@@ -37,12 +37,12 @@ func NewCustomerHandler(s customer.Service) *CustomerHandler {
 func (s *CustomerHandler) Store(c *gin.Context) {
 	var req dto.CreateCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		web.Error(c, http.StatusUnprocessableEntity, "%v", err)
+		web.Error(c, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
 	if err := req.Validate(); err != nil {
-		web.Error(c, http.StatusBadRequest, "%v", err)
+		web.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -144,12 +144,12 @@ func (s *CustomerHandler) Update(c *gin.Context) {
 
 	var req dto.UpdateCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		web.Error(c, http.StatusUnprocessableEntity, "%v", err)
+		web.Error(c, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
 	if err := req.Validate(); err != nil {
-		web.Error(c, http.StatusBadRequest, "%v", err)
+		web.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 

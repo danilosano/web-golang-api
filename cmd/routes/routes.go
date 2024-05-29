@@ -43,12 +43,12 @@ func (r *router) buildCustomerRoutes() {
 	repo := customer.NewRepository(r.db)
 	service := customer.NewService(repo)
 	handler := handler.NewCustomerHandler(service)
-	sections := r.rg.Group("/customers")
+	customers := r.rg.Group("/customers")
 	{
-		sections.POST("/", handler.Store)
-		sections.GET("/", handler.GetAll)
-		sections.GET("/:id", handler.Get)
-		sections.PUT("/:id", handler.Update)
-		sections.DELETE("/:id", handler.Delete)
+		customers.POST("/", handler.Store)
+		customers.GET("/", handler.GetAll)
+		customers.GET("/:id", handler.Get)
+		customers.PUT("/:id", handler.Update)
+		customers.DELETE("/:id", handler.Delete)
 	}
 }
