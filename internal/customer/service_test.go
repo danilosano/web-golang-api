@@ -1,4 +1,4 @@
-package customer_test
+package customer
 
 import (
 	"context"
@@ -6,17 +6,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danilosano/web-golang-api/internal/customer"
 	"github.com/danilosano/web-golang-api/internal/domain"
 	"github.com/danilosano/web-golang-api/internal/domain/dto"
 	mocks "github.com/danilosano/web-golang-api/pkg/tests/customers"
 	"github.com/stretchr/testify/assert"
 )
 
-func createService(t *testing.T) (customer.Service, *mocks.CustomersRepositoryMock, context.Context) {
+func createService(t *testing.T) (Service, *mocks.CustomersRepositoryMock, context.Context) {
 	t.Helper()
 	repoMock := new(mocks.CustomersRepositoryMock)
-	service := customer.NewService(repoMock)
+	service := NewService(repoMock)
 	ctx := context.Background()
 	return service, repoMock, ctx
 }
@@ -24,10 +23,10 @@ func createService(t *testing.T) (customer.Service, *mocks.CustomersRepositoryMo
 var (
 	CustomerNumber int = 2
 
-	mockedCustomerList = []domain.Customer{
+	mockedCustomerList = []dto.ResultCustomerRequest{
 		{
 			ID:             1,
-			CustomerNumber: 2,
+			CustomerNumber: &CustomerNumber,
 			FirstName:      "Danilo",
 			LastName:       "Sano",
 			CreatedAt:      time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -44,6 +43,13 @@ var (
 		CustomerNumber: &CustomerNumber,
 		FirstName:      "Danilo",
 		LastName:       "Sano",
+	}
+
+	mockedResultCustomer = dto.ResultCustomerRequest{
+		ID:             1,
+		CustomerNumber: &CustomerNumber,
+		FirstName:      mockedCustomer.FirstName,
+		LastName:       mockedCustomer.LastName,
 	}
 )
 
@@ -72,17 +78,19 @@ func TestGetAll(t *testing.T) {
 func TestCreate(t *testing.T) {
 	t.Run("If it contains the required fields, it will be created.", func(t *testing.T) {
 		service, repoMock, ctx := createService(t)
-		repoMock.On("ExistsByCustomerNumberWithContext", ctx, input.CustomerNumber).Return(false)
+		repoMock.On("ExistsByCustomerNumberWithContext", ctx, *input.CustomerNumber).Return(false)
 		repoMock.On("SaveWithContext", ctx, domain.Customer{
 			ID:             0,
 			CustomerNumber: *input.CustomerNumber,
 			FirstName:      input.FirstName,
-			LastName:       input.LastName}).Return(1, nil)
-		repoMock.On("GetWithContext", ctx, 1).Return(mockedCustomer, nil)
+			LastName:       input.LastName,
+			CreatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Now().Location())}).Return(1, nil)
+		repoMock.On("GetWithContext", ctx, 1).Return(mockedResultCustomer, nil)
 
 		result, err := service.Save(ctx, input)
 		assert.Nil(t, err)
-		assert.Equal(t, mockedCustomer, result)
+		mockedResultCustomer.CreatedAt = result.CreatedAt
+		assert.Equal(t, mockedResultCustomer, result)
 	})
 
 	t.Run("If the customer_number already exists it cannot be created.", func(t *testing.T) {
@@ -91,7 +99,7 @@ func TestCreate(t *testing.T) {
 
 		_, err := service.Save(ctx, input)
 		assert.NotNil(t, err)
-		assert.Equal(t, customer.ErrorCustomerNumberAlreadyExist, err)
+		assert.Equal(t, ErrorCustomerNumberAlreadyExist, err)
 	})
 
 	t.Run("If an unexpected backend error occurs in the save function, return an error.", func(t *testing.T) {
@@ -101,7 +109,8 @@ func TestCreate(t *testing.T) {
 			ID:             0,
 			CustomerNumber: *input.CustomerNumber,
 			FirstName:      input.FirstName,
-			LastName:       input.LastName}).Return(1, errors.New("generic error"))
+			LastName:       input.LastName,
+			CreatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Now().Location())}).Return(1, errors.New("generic error"))
 
 		_, err := service.Save(ctx, input)
 		assert.NotNil(t, err)
@@ -115,7 +124,8 @@ func TestCreate(t *testing.T) {
 			ID:             0,
 			CustomerNumber: *input.CustomerNumber,
 			FirstName:      input.FirstName,
-			LastName:       input.LastName}).Return(1, nil)
+			LastName:       input.LastName,
+			CreatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Now().Location())}).Return(1, nil)
 		repoMock.On("GetWithContext", ctx, 1).Return(domain.Customer{}, errors.New("generic error"))
 
 		_, err := service.Save(ctx, input)
@@ -126,26 +136,24 @@ func TestCreate(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	t.Run("If the element searched for by id does not exist, return null.", func(t *testing.T) {
-		var customerNil domain.Customer
 		service, repoMock, ctx := createService(t)
 
 		repoMock.On("ExistsByIDWithContext", ctx, 1).Return(false)
 
-		result, err := service.Get(ctx, 1)
+		_, err := service.Get(ctx, 1)
 		assert.NotNil(t, err)
-		assert.Equal(t, customerNil, result)
-		assert.Equal(t, customer.ErrorCustomerNotFound, err)
+		assert.Equal(t, ErrorCustomerNotFound, err)
 	})
 
 	t.Run("If the element searched for by id exists, it will return the requested element information.", func(t *testing.T) {
 		service, repoMock, ctx := createService(t)
 
 		repoMock.On("ExistsByIDWithContext", ctx, 1).Return(true)
-		repoMock.On("GetWithContext", ctx, 1).Return(mockedCustomer, nil)
+		repoMock.On("GetWithContext", ctx, 1).Return(mockedResultCustomer, nil)
 
 		result, err := service.Get(ctx, 1)
 		assert.Nil(t, err)
-		assert.Equal(t, mockedCustomer, result)
+		assert.Equal(t, mockedResultCustomer, result)
 	})
 
 	t.Run("When the backend returns an unexpected error, return the error", func(t *testing.T) {
@@ -170,12 +178,13 @@ func TestUpdate(t *testing.T) {
 			ID:             mockedCustomer.ID,
 			CustomerNumber: *input.CustomerNumber,
 			FirstName:      input.FirstName,
-			LastName:       input.LastName}).Return(nil)
-		repoMock.On("GetWithContext", ctx, 1).Return(mockedCustomer, nil)
+			LastName:       input.LastName,
+			UpdatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Now().Location())}).Return(nil)
+		repoMock.On("GetWithContext", ctx, mockedCustomer.ID).Return(mockedResultCustomer, nil)
 
 		result, err := service.Update(ctx, inputUpdate, mockedCustomer.ID)
 		assert.Nil(t, err)
-		assert.Equal(t, mockedCustomer, result)
+		assert.Equal(t, mockedResultCustomer, result)
 	})
 
 	t.Run("If the customer to be updated does not exist, null will be returned.", func(t *testing.T) {
@@ -184,7 +193,7 @@ func TestUpdate(t *testing.T) {
 
 		_, err := service.Update(ctx, inputUpdate, mockedCustomer.ID)
 		assert.NotNil(t, err)
-		assert.Equal(t, customer.ErrorCustomerNotFound, err)
+		assert.Equal(t, ErrorCustomerNotFound, err)
 	})
 
 	t.Run("If the backend returns an unexpected error when trying to update, return the error.", func(t *testing.T) {
@@ -196,7 +205,8 @@ func TestUpdate(t *testing.T) {
 			ID:             mockedCustomer.ID,
 			CustomerNumber: *input.CustomerNumber,
 			FirstName:      input.FirstName,
-			LastName:       input.LastName}).Return(errors.New("generic error"))
+			LastName:       input.LastName,
+			UpdatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Now().Location())}).Return(errors.New("generic error"))
 
 		_, err := service.Update(ctx, inputUpdate, mockedCustomer.ID)
 		assert.NotNil(t, err)
@@ -208,11 +218,12 @@ func TestUpdate(t *testing.T) {
 		repoMock.On("ExistsByIDWithContext", ctx, mockedCustomer.ID).Return(true)
 		repoMock.On("ExistsByCustomerNumberAndIDWithContext", ctx, mockedCustomer.ID, *input.CustomerNumber).Return(true)
 		repoMock.On("ExistsByCustomerNumberWithContext", ctx, *input.CustomerNumber).Return(false)
-		repoMock.On("UpdateWithContext", ctx, ctx, domain.Customer{
+		repoMock.On("UpdateWithContext", ctx, domain.Customer{
 			ID:             mockedCustomer.ID,
 			CustomerNumber: *input.CustomerNumber,
 			FirstName:      input.FirstName,
-			LastName:       input.LastName}).Return(nil)
+			LastName:       input.LastName,
+			UpdatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Now().Location())}).Return(nil)
 		repoMock.On("GetWithContext", ctx, mockedCustomer.ID).Return(domain.Customer{}, errors.New("generic error"))
 
 		_, err := service.Update(ctx, inputUpdate, mockedCustomer.ID)
@@ -228,7 +239,7 @@ func TestUpdate(t *testing.T) {
 
 		_, err := service.Update(ctx, inputUpdate, mockedCustomer.ID)
 		assert.NotNil(t, err)
-		assert.Equal(t, customer.ErrorCustomerNumberAlreadyExist, err)
+		assert.Equal(t, ErrorCustomerNumberAlreadyExist, err)
 	})
 }
 
@@ -240,7 +251,7 @@ func TestDelete(t *testing.T) {
 
 		err := service.Delete(ctx, 1)
 		assert.NotNil(t, err)
-		assert.Equal(t, customer.ErrorCustomerNotFound, err)
+		assert.Equal(t, ErrorCustomerNotFound, err)
 	})
 
 	t.Run("If the deletion is successful, the item will not appear in the list.", func(t *testing.T) {

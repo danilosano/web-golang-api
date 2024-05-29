@@ -1,11 +1,10 @@
-package customer_test
+package customer
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/danilosano/web-golang-api/internal/customer"
 	"github.com/danilosano/web-golang-api/internal/domain"
 	"github.com/danilosano/web-golang-api/internal/domain/dto"
 	"github.com/danilosano/web-golang-api/pkg/testutil"
@@ -33,7 +32,7 @@ var (
 func TestSuite_CustomerRepository(t *testing.T) {
 	db, err := testutil.InitTxdbDatabase(t)
 	assert.NoError(t, err)
-	repository := customer.NewRepository(db)
+	repository := NewRepository(db)
 
 	testStoreWithContext(t, repository)
 	testUpdateWithContext(t, repository)
@@ -46,7 +45,7 @@ func TestSuite_CustomerRepository(t *testing.T) {
 	db.Close()
 }
 
-func testStoreWithContext(t *testing.T, repository customer.Repository) {
+func testStoreWithContext(t *testing.T, repository Repository) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -58,7 +57,7 @@ func testStoreWithContext(t *testing.T, repository customer.Repository) {
 	assert.True(t, result)
 }
 
-func testUpdateWithContext(t *testing.T, repository customer.Repository) {
+func testUpdateWithContext(t *testing.T, repository Repository) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -86,7 +85,7 @@ func testUpdateWithContext(t *testing.T, repository customer.Repository) {
 	}, result)
 }
 
-func testDeleteWithContext(t *testing.T, repository customer.Repository) {
+func testDeleteWithContext(t *testing.T, repository Repository) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -104,7 +103,7 @@ func testDeleteWithContext(t *testing.T, repository customer.Repository) {
 	assert.False(t, exists)
 }
 
-func testExistsByCustomerNumberWithContext(t *testing.T, repository customer.Repository) {
+func testExistsByCustomerNumberWithContext(t *testing.T, repository Repository) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -116,7 +115,7 @@ func testExistsByCustomerNumberWithContext(t *testing.T, repository customer.Rep
 	assert.True(t, exists)
 }
 
-func testExistsByCustomerNumberAndIDWithContext(t *testing.T, repository customer.Repository) {
+func testExistsByCustomerNumberAndIDWithContext(t *testing.T, repository Repository) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -128,7 +127,7 @@ func testExistsByCustomerNumberAndIDWithContext(t *testing.T, repository custome
 	assert.True(t, exists)
 }
 
-func testGetByCustomerNumberWithContext(t *testing.T, repository customer.Repository) {
+func testGetByCustomerNumberWithContext(t *testing.T, repository Repository) {
 	t.Run("If the customer number exists, return the customer", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
@@ -156,11 +155,11 @@ func testGetByCustomerNumberWithContext(t *testing.T, repository customer.Reposi
 
 		_, err := repository.GetByCustomerNumberWithContext(ctx, 999999)
 		assert.Error(t, err)
-		assert.Equal(t, customer.ErrorCustomerNotFound, err)
+		assert.Equal(t, ErrorCustomerNotFound, err)
 	})
 }
 
-func testGetAllWithContext(t *testing.T, repository customer.Repository) {
+func testGetAllWithContext(t *testing.T, repository Repository) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 

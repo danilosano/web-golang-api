@@ -38,7 +38,7 @@ func (s *service) Save(ctx context.Context, input dto.CreateCustomerRequest) (dt
 		CustomerNumber: *input.CustomerNumber,
 		FirstName:      input.FirstName,
 		LastName:       input.LastName,
-		CreatedAt:      time.Now()}
+		CreatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(),time.Now().Second(), 0, time.Now().Location())}
 
 	if customerNumberExist := s.repository.ExistsByCustomerNumberWithContext(ctx, *input.CustomerNumber); customerNumberExist {
 		return dto.ResultCustomerRequest{}, ErrorCustomerNumberAlreadyExist
@@ -85,7 +85,7 @@ func (s *service) Update(ctx context.Context, input dto.UpdateCustomerRequest, i
 		CustomerNumber: *input.CustomerNumber,
 		FirstName:      input.FirstName,
 		LastName:       input.LastName,
-		UpdatedAt:      time.Now()}
+		UpdatedAt:      time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(),time.Now().Second(), 0, time.Now().Location())}
 
 	err := s.repository.UpdateWithContext(ctx, sr)
 	if err != nil {

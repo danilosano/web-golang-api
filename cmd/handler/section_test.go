@@ -46,7 +46,21 @@ var (
 		CreatedAt:      time.Date(2021, 10, 10, 0, 0, 0, 0, time.UTC),
 	}
 
+	mockedResultCustomer = dto.ResultCustomerRequest{
+		ID:             1,
+		CustomerNumber: &CustomerNumber,
+		FirstName:      "Danilo",
+		LastName:       "Sano",
+		CreatedAt:      time.Date(2021, 10, 10, 0, 0, 0, 0, time.UTC),
+	}
+
 	input = dto.CreateCustomerRequest{
+		CustomerNumber: &CustomerNumber,
+		FirstName:      "Danilo",
+		LastName:       "Sano",
+	}
+
+	inputUpdate = dto.UpdateCustomerRequest{
 		CustomerNumber: &CustomerNumber,
 		FirstName:      "Danilo",
 		LastName:       "Sano",
@@ -61,24 +75,28 @@ var (
 
 func TestCreate(t *testing.T) {
 	t.Run("When data entry is successful, a 201 code will be returned along with the inserted object.", func(t *testing.T) {
-		var data domain.Customer
+		var data dto.ResultCustomerRequest
 		server, service, ctx := InitServerWithCustomersRoute(t)
-		service.On("Save", ctx, input).Return(mockedCustomer, nil)
+		service.On("Save", ctx, input).Return(mockedResultCustomer, nil)
 
-		request, response := testutil.MakeRequest(http.MethodPost, pathCustomer, "")
+		request, response := testutil.MakeRequest(http.MethodPost, pathCustomer, jsonInput)
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusCreated, response.Code)
 		err := json.Unmarshal(response.Body.Bytes(), &data)
 		assert.Nil(t, err)
-		assert.Equal(t, mockedCustomer, data)
+		assert.Equal(t, mockedResultCustomer, data)
 	})
 
 	t.Run("If the JSON object does not contain the required fields, a 422 code will be returned.", func(t *testing.T) {
 		server, service, ctx := InitServerWithCustomersRoute(t)
 		service.On("Save", ctx, input).Return(domain.Customer{}, nil)
 
-		request, response := testutil.MakeRequest(http.MethodPost, pathCustomer, jsonInput)
+		request, response := testutil.MakeRequest(http.MethodPost, pathCustomer, `{
+			"customer_number":1,
+			"first_name":,
+			"last_name":"Sano"
+		}`)
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, response.Code)
@@ -112,9 +130,9 @@ func TestCreate(t *testing.T) {
 func TestGetAll(t *testing.T) {
 	t.Run("When the request is successful, the backend returns a list of all existing customers.", func(t *testing.T) {
 		var result web.Responses
-		var data []domain.Customer
+		var data []dto.ResultCustomerRequest
 
-		mockedCustomersList := []domain.Customer{mockedCustomer}
+		mockedCustomersList := []dto.ResultCustomerRequest{mockedResultCustomer}
 		server, service, ctx := InitServerWithCustomersRoute(t)
 		service.On("GetAll", ctx).Return(mockedCustomersList, nil)
 
@@ -147,7 +165,7 @@ func TestGet(t *testing.T) {
 		var result web.ErrorResponse
 
 		server, service, ctx := InitServerWithCustomersRoute(t)
-		service.On("Get", ctx, 1).Return(domain.Customer{}, customer.ErrorCustomerNotFound)
+		service.On("Get", ctx, 1).Return(dto.ResultCustomerRequest{}, customer.ErrorCustomerNotFound)
 
 		request, response := testutil.MakeRequest(http.MethodGet, pathCustomer+"1", "")
 		server.ServeHTTP(response, request)
@@ -160,10 +178,10 @@ func TestGet(t *testing.T) {
 
 	t.Run("When the request is successful, the backend will return the requested customer information.", func(t *testing.T) {
 		var result web.Responses
-		var data domain.Customer
+		var data dto.ResultCustomerRequest
 
 		server, service, ctx := InitServerWithCustomersRoute(t)
-		service.On("Get", ctx, 1).Return(mockedCustomer, nil)
+		service.On("Get", ctx, 1).Return(mockedResultCustomer, nil)
 
 		request, response := testutil.MakeRequest(http.MethodGet, pathCustomer+"1", "")
 		server.ServeHTTP(response, request)
@@ -175,7 +193,7 @@ func TestGet(t *testing.T) {
 		assert.Nil(t, err)
 		err = json.Unmarshal(jsonData, &data)
 		assert.Nil(t, err)
-		assert.Equal(t, mockedCustomer, data)
+		assert.Equal(t, mockedResultCustomer, data)
 	})
 
 	t.Run("When the backend returns an unexpected error, return code 500.", func(t *testing.T) {
@@ -219,10 +237,10 @@ func TestGet(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	t.Run("When the data update is successful, the customer with the updated information will be returned along with a 200 code.", func(t *testing.T) {
-		var data domain.Customer
+		var data dto.ResultCustomerRequest
 
 		server, service, ctx := InitServerWithCustomersRoute(t)
-		service.On("Update", ctx, input, 1).Return(mockedCustomer, nil)
+		service.On("Update", ctx, inputUpdate, 1).Return(mockedResultCustomer, nil)
 
 		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"1", jsonInput)
 		server.ServeHTTP(response, request)
@@ -230,7 +248,7 @@ func TestUpdate(t *testing.T) {
 		assert.Equal(t, http.StatusOK, response.Code)
 		err := json.Unmarshal(response.Body.Bytes(), &data)
 		assert.Nil(t, err)
-		assert.Equal(t, mockedCustomer, data)
+		assert.Equal(t, mockedResultCustomer, data)
 	})
 
 	t.Run("When the backend returns an unexpected error, return code 500.", func(t *testing.T) {
@@ -246,7 +264,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("If the customer to be updated does not exist, a 404 code will be returned.", func(t *testing.T) {
 		var resp web.ErrorResponse
 		server, service, ctx := InitServerWithCustomersRoute(t)
-		service.On("Update", ctx, input, 9999).Return(domain.Customer{}, customer.ErrorCustomerNotFound)
+		service.On("Update", ctx, inputUpdate, 9999).Return(domain.Customer{}, customer.ErrorCustomerNotFound)
 
 		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"9999", jsonInput)
 		server.ServeHTTP(response, request)
@@ -273,7 +291,7 @@ func TestUpdate(t *testing.T) {
 
 	t.Run("When a field is missing in the request body, a 422 code will be returned.", func(t *testing.T) {
 		server, _, _ := InitServerWithCustomersRoute(t)
-		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"1", jsonInput)
+		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"1", `{}`)
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, response.Code)
@@ -282,25 +300,25 @@ func TestUpdate(t *testing.T) {
 	t.Run("When there is an invalid value in the request body, a 400 code will be returned.", func(t *testing.T) {
 		var resp web.ErrorResponse
 		server, _, _ := InitServerWithCustomersRoute(t)
-		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"1", jsonInput)
+		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"1", `{
+			"customer_number":-1,
+			"first_name":"aaa",
+			"last_name":"Sano"
+		}`)
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusBadRequest, response.Code)
 		err := json.Unmarshal(response.Body.Bytes(), &resp)
 		assert.Nil(t, err)
-		assert.Equal(t, "invalid input: warehouse id cannot be less than or equal to zero", resp.Message)
+		assert.Equal(t, "invalid input: customer number must be greater than 0", resp.Message)
 	})
 
 	t.Run("If the customer number to be updated already exists, a 409 code will be returned.", func(t *testing.T) {
 		var resp web.ErrorResponse
 		server, service, ctx := InitServerWithCustomersRoute(t)
-		service.On("Update", ctx, input, 2).Return(domain.Customer{}, customer.ErrorCustomerNumberAlreadyExist)
+		service.On("Update", ctx, inputUpdate, 2).Return(domain.Customer{}, customer.ErrorCustomerNumberAlreadyExist)
 
-		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"2", `{
-			"customer_number":2,
-			"first_name":1,
-			"last_name":"Sano"
-		}`)
+		request, response := testutil.MakeRequest(http.MethodPut, pathCustomer+"2", jsonInput)
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusConflict, response.Code)

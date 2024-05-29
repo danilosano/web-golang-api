@@ -12,9 +12,9 @@ type CreateCustomerRequest struct {
 }
 
 type UpdateCustomerRequest struct {
-	CustomerNumber *int   `json:"customer_number"`
-	FirstName      string `json:"first_name"`
-	LastName       string `json:"last_name"`
+	CustomerNumber *int   `json:"customer_number" binding:"required"`
+	FirstName      string `json:"first_name" binding:"required"`
+	LastName       string `json:"last_name" binding:"required"`
 }
 
 type ResultCustomerRequest struct {
