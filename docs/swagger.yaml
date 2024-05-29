@@ -1,122 +1,239 @@
 definitions:
-  web.Response:
+  domain.Customer:
+    properties:
+      created_at:
+        type: string
+      customer_number:
+        type: integer
+      deleted_at:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CreateCustomerRequest:
+    properties:
+      customer_number:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    type: object
+  dto.UpdateCustomerRequest:
+    properties:
+      customer_number:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    required:
+    - customer_number
+    - first_name
+    - last_name
+    type: object
+  web.ErrorResponse:
     properties:
       code:
         type: string
-      data: {}
-      error:
+      message:
         type: string
+    type: object
+  web.Responses:
+    properties:
+      data: {}
     type: object
 info:
   contact:
-    name: API Support
-    url: https://developers.mercadolibre.com.ar/support
-  description: This API Handle MELI Users.
+    name: Golang Web API.
+  description: This is a study Golang Web API.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: https://developers.mercadolibre.com.ar/es_ar/terminos-y-condiciones
-  title: MELI Bootcamp API
+  title: Golang Web API
   version: "1.0"
 paths:
-  /users:
+  /api/v1/customers:
     get:
       consumes:
       - application/json
-      description: get users
-      parameters:
-      - description: token
-        in: header
-        name: token
-        required: true
-        type: string
+      description: Get all customers
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Success
           schema:
-            $ref: '#/definitions/web.Response'
-      summary: List users
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.Customer'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List all customers
       tags:
-      - Users
+      - Customers
     post:
       consumes:
       - application/json
-      description: insert users
+      description: create customer
       parameters:
-      - description: token
-        in: header
-        name: token
+      - description: Customer to be created
+        in: body
+        name: customer
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/dto.CreateCustomerRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Success
           schema:
-            $ref: '#/definitions/web.Response'
-      summary: Store Users
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateCustomerRequest'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create customer
       tags:
-      - Users
-  /users/:id:
+      - Customers
+  /api/v1/customers/{id}:
     delete:
-      description: Delete User
+      description: delete customer
       parameters:
-      - description: token
-        in: header
-        name: token
+      - description: Customer ID
+        in: path
+        name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad Request
           schema:
-            type: Object
-      summary: Delete User
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete customer
       tags:
-      - Users
+      - Customers
+    get:
+      description: Get customer by ID
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.Customer'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Get customer
+      tags:
+      - Customers
     patch:
       consumes:
       - application/json
-      description: update Nome and Sobrenome from Users
+      description: update customerv
       parameters:
-      - description: token
-        in: header
-        name: token
+      - description: Customer ID
+        in: path
+        name: id
         required: true
-        type: string
+        type: integer
+      - description: Customer to be updated
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCustomerRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Success
           schema:
-            type: Object
-      summary: Update Nome and Sobrenome from Users
-      tags:
-      - Users
-    put:
-      consumes:
-      - application/json
-      description: update users
-      parameters:
-      - description: token
-        in: header
-        name: token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UpdateCustomerRequest'
+              type: object
+        "400":
+          description: Bad Request
           schema:
-            type: Object
-      summary: Update Users
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update customer
       tags:
-      - Users
+      - Customers
 swagger: "2.0"

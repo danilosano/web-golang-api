@@ -14,12 +14,11 @@ import (
 	"github.com/danilosano/web-golang-api/docs"
 )
 
-// @title MELI Bootcamp Fresh Food API
+// @title Golang Web API
 // @version 1.0
-// @description This API handle MELI Fresh Food.
+// @description Study of Golang in Web APIs.
 //
-// @contact.name API Fresh Food.
-// @contact.url https://developers.mercadolibre.com.ar/support
+// @contact.name Golang Web API.
 //
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
