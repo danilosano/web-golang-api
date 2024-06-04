@@ -1,0 +1,239 @@
+definitions:
+  domain.Customer:
+    properties:
+      created_at:
+        type: string
+      customer_number:
+        type: integer
+      deleted_at:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CreateCustomerRequest:
+    properties:
+      customer_number:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    type: object
+  dto.UpdateCustomerRequest:
+    properties:
+      customer_number:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    required:
+    - customer_number
+    - first_name
+    - last_name
+    type: object
+  web.ErrorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  web.Responses:
+    properties:
+      data: {}
+    type: object
+info:
+  contact:
+    name: Golang Web API.
+  description: This is a study Golang Web API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Golang Web API
+  version: "1.0"
+paths:
+  /api/v1/customers:
+    get:
+      consumes:
+      - application/json
+      description: Get all customers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.Customer'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List all customers
+      tags:
+      - Customers
+    post:
+      consumes:
+      - application/json
+      description: create customer
+      parameters:
+      - description: Customer to be created
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateCustomerRequest'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create customer
+      tags:
+      - Customers
+  /api/v1/customers/{id}:
+    delete:
+      description: delete customer
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete customer
+      tags:
+      - Customers
+    get:
+      description: Get customer by ID
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.Customer'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Get customer
+      tags:
+      - Customers
+    patch:
+      consumes:
+      - application/json
+      description: update customerv
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Customer to be updated
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/web.Responses'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UpdateCustomerRequest'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update customer
+      tags:
+      - Customers
+swagger: "2.0"

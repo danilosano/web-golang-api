@@ -1,0 +1,24 @@
+volumes:
+  mysql_vol: {}
+services:
+  database:
+    image: mysql
+    ports:
+      - "3306:3306"
+    command: mysqld --sql_mode="ALLOW_INVALID_DATES"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MY_SQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: web_golang_api
+    volumes:
+      - ./data/db.sql:/docker-entrypoint-initdb.d/db.sql
+      - mysql_vol:/var/lib/mysql
+  # application:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8080:8080
+  #   volumes:
+  #     - /Users/dceccarelli/Desktop/go-fresh-food:/app
